@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1770179646796,
+      "tag": "0000_fair_black_crow",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1770180574105,
+      "tag": "0001_luxuriant_skaar",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1738600000000,
+      "tag": "0002_add_posts_tags",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1738600100000,
+      "tag": "0003_add_posts_image_urls",
+      "breakpoints": true
+    }
+  ]
+}
