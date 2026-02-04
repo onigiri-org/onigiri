@@ -143,7 +143,73 @@ function removeTag(index: number) {
   tags.value = tags.value.filter((_tag: string, i: number) => i !== index)
 }
 
-const uploadImages = useUpload('/api/upload', { formKey: 'files', multiple: true })
+// 画像をリサイズする関数（1920x1920を超える場合）
+async function resizeImage(file: File): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        // 1920x1920以下の場合はそのまま返す
+        if (img.width <= 1920 && img.height <= 1920) {
+          resolve(file)
+          return
+        }
+
+        // アスペクト比を維持してリサイズ
+        let width = img.width
+        let height = img.height
+        const maxSize = 1920
+
+        if (width > height) {
+          if (width > maxSize) {
+            height = (height * maxSize) / width
+            width = maxSize
+          }
+        } else {
+          if (height > maxSize) {
+            width = (width * maxSize) / height
+            height = maxSize
+          }
+        }
+
+        // Canvasでリサイズ
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d')
+        if (!ctx) {
+          reject(new Error('Canvas context not available'))
+          return
+        }
+
+        ctx.drawImage(img, 0, 0, width, height)
+
+        // Blobに変換
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) {
+              reject(new Error('Failed to resize image'))
+              return
+            }
+            // 元のファイル名とMIMEタイプを維持
+            const resizedFile = new File([blob], file.name, {
+              type: file.type,
+              lastModified: Date.now()
+            })
+            resolve(resizedFile)
+          },
+          file.type,
+          0.9 // 品質（0.9 = 90%）
+        )
+      }
+      img.onerror = () => reject(new Error('Failed to load image'))
+      img.src = e.target?.result as string
+    }
+    reader.onerror = () => reject(new Error('Failed to read file'))
+    reader.readAsDataURL(file)
+  })
+}
 
 async function onImageSelect(event: Event) {
   const target = event.target as HTMLInputElement
@@ -157,10 +223,31 @@ async function onImageSelect(event: Event) {
   imageUploading.value = true
   error.value = ''
   try {
-    const result = await uploadImages(target)
+    // 画像をリサイズ
+    const filesToUpload = files.slice(0, remaining)
+    const resizedFiles = await Promise.all(filesToUpload.map(file => resizeImage(file)))
+
+    // FormDataを作成してリサイズ後の画像をアップロード
+    const formData = new FormData()
+    resizedFiles.forEach(file => {
+      formData.append('files', file)
+    })
+
+    // FormDataを送信（fetch APIを直接使用）
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'アップロードに失敗しました' }))
+      throw new Error(errorData.message || 'アップロードに失敗しました')
+    }
+
+    const result = await response.json() as { pathname: string } | { pathname: string }[]
+
     const list = Array.isArray(result) ? result : result ? [result] : []
     const pathnames = list
-      .slice(0, remaining)
       .map((item: { pathname?: string }) => item?.pathname)
       .filter(Boolean) as string[]
     const newUrls = pathnames.map(p => `/images/${p}`)

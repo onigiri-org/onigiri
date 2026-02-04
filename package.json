@@ -6,8 +6,9 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "preview": "npx nuxthub preview",
-    "deploy": "npx nuxthub deploy",
+    "preview": "wrangler pages dev .output/public",
+    "deploy": "npm run build && wrangler deploy",
+    "deploy:legacy": "npx nuxthub deploy",
     "postinstall": "nuxt prepare",
     "lint": "eslint ."
   },

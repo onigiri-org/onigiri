@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "onigiri",
+  "compatibility_date": "2025-03-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": ".output/server/index.mjs",
+  "assets": {
+    "directory": ".output/public",
+    "binding": "ASSETS"
+  },
+  // D1データベース
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "onigiri-db",
+      "database_id": "2420ed5a-2a4c-4400-acf5-15b14b5f43b7"
+    }
+  ],
+  // R2バケット
+  "r2_buckets": [
+    {
+      "binding": "BLOB",
+      "bucket_name": "onigiri-blob"
+    }
+  ],
+  // KV名前空間
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "beb16a371f1c413e8d77b6829a492b60"
+    }
+  ]
+}

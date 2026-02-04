@@ -28,10 +28,22 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-03-01',
 
   // https://hub.nuxt.com/docs/getting-started/installation#options (v0.10: db は Drizzle)
+  // NuxtHubが自動的にデプロイ環境を検出して設定します
   hub: {
     db: 'sqlite',
     blob: true,
     kv: true
+  },
+
+  // Cloudflare Workers向けのNitro設定
+  // Workers Buildsを使用する場合、cloudflare_module preset（アンダースコア）を使用
+  // deployConfig: trueを設定すると、Nitroが自動的にwrangler.jsonを生成します
+  nitro: {
+    preset: 'cloudflare_module',
+    cloudflare: {
+      deployConfig: true,
+      nodeCompat: true
+    }
   },
 
   // Development config
