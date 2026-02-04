@@ -12,7 +12,7 @@ self.addEventListener('push', (event) => {
     }
   }
 
-  const title = data.title || 'おにぎり'
+  const title = data.title || 'ONIGIRI'
   const options = {
     body: data.body || '新しい通知があります',
     icon: data.icon || '/favicon.ico',

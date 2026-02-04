@@ -77,6 +77,12 @@ const decodedTag = computed(() => {
   }
 })
 
+useHead({
+  title: computed(() => {
+    return `「${decodedTag.value}」の投稿 | ONIGIRI`
+  })
+})
+
 const offset = ref(0)
 const limit = 20
 

@@ -425,14 +425,45 @@ npm run deploy
 
 ## データベースのマイグレーション
 
-デプロイ後、本番環境のデータベースにマイグレーションを適用する必要があります：
+デプロイ後、本番環境のデータベースにマイグレーションを適用する必要があります。
 
-1. デプロイされたアプリのURLにアクセス
-2. `/api/db/migrate` エンドポイントにPOSTリクエストを送信
+### 方法1: Wrangler CLIでマイグレーションを実行（推奨）
+
+**重要**: 本番環境のCloudflare D1データベースに対して実行するには、`--remote`フラグが必要です。
 
 ```bash
-curl -X POST https://your-project-name.pages.dev/api/db/migrate
+# マイグレーションファイルを確認
+ls server/db/migrations/sqlite/
+
+# 本番環境のマイグレーションを実行（--remoteフラグを追加）
+npx wrangler d1 execute onigiri-db --remote --file=./server/db/migrations/sqlite/0000_fair_black_crow.sql
+npx wrangler d1 execute onigiri-db --remote --file=./server/db/migrations/sqlite/0001_luxuriant_skaar.sql
+npx wrangler d1 execute onigiri-db --remote --file=./server/db/migrations/sqlite/0002_add_posts_tags.sql
+npx wrangler d1 execute onigiri-db --remote --file=./server/db/migrations/sqlite/0003_add_posts_image_urls.sql
+npx wrangler d1 execute onigiri-db --remote --file=./server/db/migrations/sqlite/0004_rename_reply_to_comment.sql
 ```
+
+**注意**: `--remote`フラグがない場合、ローカルのデータベース（`.wrangler/state/v3/d1`）に対して実行されます。
+
+### 方法2: Nuxt CLIでマイグレーションを実行
+
+```bash
+# 環境変数を設定（必要に応じて）
+export CLOUDFLARE_ACCOUNT_ID=your_account_id
+export CLOUDFLARE_API_TOKEN=your_api_token
+
+# マイグレーションを実行
+npx nuxt db migrate
+```
+
+### 方法3: Cloudflare DashboardでSQLを実行
+
+1. [Cloudflare Dashboard](https://dash.cloudflare.com/)にログイン
+2. **Workers & Pages** → **D1** → **onigiri-db** を選択
+3. **Console** タブを開く
+4. マイグレーションファイルの内容をコピーして実行
+
+**注意**: マイグレーションは順番に実行してください（0000 → 0001 → 0002 → ...）
 
 ## トラブルシューティング
 

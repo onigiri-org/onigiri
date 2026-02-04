@@ -77,6 +77,10 @@
 </template>
 
 <script setup lang="ts">
+useHead({
+  title: 'タグ検索 | ONIGIRI'
+})
+
 const router = useRouter()
 
 // タグ検索関連

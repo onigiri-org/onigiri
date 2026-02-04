@@ -5,7 +5,7 @@
         <div class="text-center">
           <div class="flex flex-col items-center justify-center gap-2 mb-2">
             <OnigiriIcon :size="32" :white-background="true" class="text-primary" />
-            <h1 class="text-2xl font-bold">おにぎり</h1>
+            <h1 class="text-2xl font-bold">ONIGIRI</h1>
           </div>
           <p class="text-gray-500 dark:text-gray-400 mt-2 text-sm">飲食店の口コミSNS</p>
         </div>
@@ -119,6 +119,12 @@ const { login, register } = useAuth()
 const router = useRouter()
 
 const tab = ref('login')
+
+useHead({
+  title: computed(() => {
+    return tab.value === 'login' ? 'ログイン | ONIGIRI' : '新規登録 | ONIGIRI'
+  })
+})
 const tabs = [
   { label: 'ログイン', value: 'login' },
   { label: '新規登録', value: 'register' }

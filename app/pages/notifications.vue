@@ -109,6 +109,10 @@
 </template>
 
 <script setup lang="ts">
+useHead({
+  title: '通知 | ONIGIRI'
+})
+
 interface Notification {
   type: 'like' | 'comment' | 'repost'
   id: number

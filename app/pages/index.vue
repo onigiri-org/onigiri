@@ -85,6 +85,10 @@
 </template>
 
 <script setup lang="ts">
+useHead({
+  title: 'タイムライン | ONIGIRI'
+})
+
 const { user } = useAuth()
 
 const offset = ref(0)

@@ -135,6 +135,10 @@
 </template>
 
 <script setup lang="ts">
+useHead({
+  title: '通知設定 | ONIGIRI'
+})
+
 const { user } = useAuth()
 const { requestPermission, subscribeToPush, unsubscribeFromPush } = usePushNotification()
 

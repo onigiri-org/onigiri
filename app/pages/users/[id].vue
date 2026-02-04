@@ -451,6 +451,15 @@ const { data, pending, error, refresh } = await useFetch(() => `/api/users/${ide
 })
 
 const profile = computed(() => data.value?.user ?? null)
+
+useHead({
+  title: computed(() => {
+    if (profile.value) {
+      return `${profile.value.name} (@${profile.value.handle || profile.value.id}) | ONIGIRI`
+    }
+    return 'プロフィール | ONIGIRI'
+  })
+})
 const posts = ref<any[]>([])
 const loadingMore = ref(false)
 const tab = ref<'posts' | 'likes'>('posts')

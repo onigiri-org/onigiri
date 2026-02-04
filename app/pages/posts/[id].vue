@@ -65,6 +65,17 @@ const { data, pending, error, refresh } = await useFetch(() => `/api/posts/${pos
 const post = computed(() => data.value?.post ?? null)
 const comments = computed(() => data.value?.comments ?? [])
 
+useHead({
+  title: computed(() => {
+    if (post.value) {
+      const content = post.value.content || ''
+      const preview = content.length > 50 ? content.substring(0, 50) + '...' : content
+      return `${preview} | ONIGIRI`
+    }
+    return '投稿詳細 | ONIGIRI'
+  })
+})
+
 function onCommented() {
   refresh()
 }

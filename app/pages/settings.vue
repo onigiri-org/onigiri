@@ -62,6 +62,10 @@
 </template>
 
 <script setup lang="ts">
+useHead({
+  title: '設定 | ONIGIRI'
+})
+
 const { logout } = useAuth()
 const router = useRouter()
 

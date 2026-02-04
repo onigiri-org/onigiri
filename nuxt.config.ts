@@ -30,9 +30,28 @@ export default defineNuxtConfig({
   // https://hub.nuxt.com/docs/getting-started/installation#options (v0.10: db は Drizzle)
   // NuxtHubが自動的にデプロイ環境を検出して設定します
   hub: {
-    db: 'sqlite',
-    blob: true,
-    kv: true
+    // 開発環境では自動的にローカルSQLiteを使用
+    // Cloudflare環境では自動的にCloudflare D1を使用
+    // NuxtHubが自動的に環境を検出するため、開発環境では'sqlite'を指定
+    db: process.env.CF_PAGES || process.env.CF_WORKERS ? {
+      dialect: 'sqlite',
+      driver: 'd1',
+      connection: {
+        databaseId: '2420ed5a-2a4c-4400-acf5-15b14b5f43b7'
+      }
+    } : 'sqlite',
+    // 開発環境では自動的にローカルファイルシステムを使用
+    // Cloudflare環境では自動的にCloudflare R2を使用
+    blob: process.env.CF_PAGES || process.env.CF_WORKERS ? {
+      driver: 'cloudflare-r2',
+      bucketName: 'onigiri-blob'
+    } : true,
+    // 開発環境では自動的にfs-liteを使用
+    // Cloudflare環境では自動的にCloudflare KVバインディングを使用
+    kv: process.env.CF_PAGES || process.env.CF_WORKERS ? {
+      driver: 'cloudflare-kv-binding',
+      namespaceId: 'beb16a371f1c413e8d77b6829a492b60'
+    } : true
   },
 
   // Cloudflare Workers向けのNitro設定
@@ -63,10 +82,10 @@ export default defineNuxtConfig({
   pwa: {
     registerType: 'autoUpdate',
     manifest: {
-      name: 'おにぎり',
-      short_name: 'おにぎり',
+      name: 'ONIGIRI',
+      short_name: 'ONIGIRI',
       description: '飲食店の口コミSNS',
-      theme_color: '#f59e0b',
+      theme_color: '#FFE24E',
       background_color: '#ffffff',
       display: 'standalone',
       orientation: 'portrait',
@@ -77,6 +96,21 @@ export default defineNuxtConfig({
           src: '/favicon.ico',
           sizes: '64x64',
           type: 'image/x-icon'
+        },
+        {
+          src: '/favicon.png',
+          sizes: '192x192',
+          type: 'image/png'
+        },
+        {
+          src: '/favicon-512.png',
+          sizes: '512x512',
+          type: 'image/png'
+        },
+        {
+          src: '/apple-touch-icon.png',
+          sizes: '180x180',
+          type: 'image/png'
         }
       ]
     },

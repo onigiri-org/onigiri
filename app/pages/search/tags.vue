@@ -98,6 +98,16 @@
 <script setup lang="ts">
 const route = useRoute()
 
+useHead({
+  title: computed(() => {
+    const tags = tagsParam.value
+    if (tags && tags.length > 0) {
+      return `${tags.join(', ')} の検索結果 | ONIGIRI`
+    }
+    return 'タグ検索 | ONIGIRI'
+  })
+})
+
 // URLクエリパラメータからタグを取得
 const tagsParam = computed(() => {
   const tags = route.query.tags
