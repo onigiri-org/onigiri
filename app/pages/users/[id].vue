@@ -17,12 +17,12 @@
           variant="ghost"
           color="neutral"
           size="sm"
-          icon="i-lucide-log-out"
+          icon="i-lucide-settings"
           class="text-gray-500 dark:text-gray-400"
-          aria-label="ログアウト"
-          @click="handleLogout"
+          aria-label="設定"
+          to="/settings"
         >
-          ログアウト
+          設定
         </UButton>
       </div>
 
@@ -443,7 +443,7 @@ const route = useRoute()
 const router = useRouter()
 const identifier = computed(() => route.params.id as string)
 
-const { user, logout, fetchUser } = useAuth()
+const { user, fetchUser } = useAuth()
 
 const { data, pending, error, refresh } = await useFetch(() => `/api/users/${identifier.value}`, {
   key: () => `user-${identifier.value}`,
@@ -843,8 +843,4 @@ async function loadMoreLikes() {
   }
 }
 
-const handleLogout = async () => {
-  await logout()
-  await router.push('/login')
-}
 </script>

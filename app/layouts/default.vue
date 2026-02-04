@@ -94,22 +94,36 @@
               <span>プロフィール</span>
             </NuxtLink>
           </ClientOnly>
-        </nav>
 
-        <ClientOnly>
-          <div v-if="user" class="pt-4 border-t border-gray-200 dark:border-gray-800">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              size="md"
-              class="w-full justify-start"
+          <!-- 区切り線 -->
+          <ClientOnly>
+            <hr v-if="user" class="my-2 border-gray-200 dark:border-gray-800" />
+          </ClientOnly>
+
+          <ClientOnly>
+            <NuxtLink
+              v-if="user"
+              to="/settings"
+              class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              active-class="bg-primary/10 text-primary font-medium"
+            >
+              <UIcon name="i-lucide-settings" class="w-5 h-5" />
+              <span>設定</span>
+            </NuxtLink>
+          </ClientOnly>
+
+          <ClientOnly>
+            <button
+              v-if="user"
+              type="button"
+              class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors w-full text-left"
               @click="handleLogout"
             >
-              <UIcon name="i-lucide-log-out" class="w-5 h-5 mr-2" />
-              ログアウト
-            </UButton>
-          </div>
-        </ClientOnly>
+              <UIcon name="i-lucide-log-out" class="w-5 h-5" />
+              <span>ログアウト</span>
+            </button>
+          </ClientOnly>
+        </nav>
       </div>
     </aside>
 
