@@ -80,10 +80,11 @@
 
       <div class="flex justify-end gap-2">
         <UButton
+          type="button"
           color="neutral"
           variant="ghost"
           size="md"
-          @click="reset"
+          @click="handleCancel"
         >
           キャンセル
         </UButton>
@@ -110,6 +111,7 @@
 const { user } = useAuth()
 const emit = defineEmits<{
   posted: []
+  cancelled: []
 }>()
 
 const MAX_TAGS = 5
@@ -184,6 +186,11 @@ const reset = () => {
   imageUrls.value = []
   error.value = ''
   if (imageInputRef.value) imageInputRef.value.value = ''
+}
+
+const handleCancel = () => {
+  reset()
+  emit('cancelled')
 }
 
 const handleSubmit = async () => {

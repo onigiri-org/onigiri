@@ -125,7 +125,7 @@
               {{ displayPost.userName }}
             </NuxtLink>
           </div>
-          <p class="text-gray-900 dark:text-gray-100 text-sm whitespace-pre-wrap break-words">{{ displayPost.content }}</p>
+          <p class="text-gray-900 dark:text-gray-100 text-sm whitespace-pre-wrap break-words" v-html="linkifyText(displayPost.content)"></p>
           <div
             v-if="displayPostImages.length"
             class="mt-2 rounded-lg overflow-hidden max-w-sm border border-gray-200 dark:border-gray-600"
@@ -142,6 +142,13 @@
               <img :src="url" :alt="displayPost.content" class="w-full h-full object-cover">
             </button>
           </div>
+          <!-- OGPカード -->
+          <OgpCard
+            v-for="(url, index) in postUrls"
+            :key="`ogp-repost-${displayPost.id}-${index}`"
+            :url="url"
+            class="mt-2"
+          />
           <!-- リポスト時は元投稿のアイコンを枠内に表示 -->
           <div class="flex items-center gap-4 text-gray-500 dark:text-gray-400 text-sm mt-3 pt-3 border-t border-gray-200 dark:border-gray-700" @click.stop>
               <div class="flex items-center gap-1">
@@ -198,7 +205,7 @@
             </button>
           </div>
         </div>
-        <p v-else class="text-gray-900 dark:text-gray-100 mb-3 whitespace-pre-wrap">{{ displayPost.content }}</p>
+        <p v-else class="text-gray-900 dark:text-gray-100 mb-3 whitespace-pre-wrap" v-html="linkifyText(displayPost.content)"></p>
 
         <div
           v-if="!isRepost && displayPostImages.length"
@@ -236,6 +243,13 @@
             </button>
           </template>
         </div>
+        <!-- OGPカード -->
+        <OgpCard
+          v-for="(url, index) in postUrls"
+          :key="`ogp-${displayPost.id}-${index}`"
+          :url="url"
+          class="mb-3"
+        />
 
         <UModal v-model:open="imageModalOpen" :ui="{ width: 'max-w-4xl' }">
           <template #content>
@@ -267,9 +281,7 @@
                   <NuxtLink :to="userUrl" class="font-medium text-sm hover:underline">
                     {{ post.userName }}
                   </NuxtLink>
-                  <p class="mt-0.5 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap line-clamp-3 break-words">
-                    {{ post.content }}
-                  </p>
+                  <p class="mt-0.5 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap line-clamp-3 break-words" v-html="linkifyText(post.content)"></p>
                   <div v-if="postImages.length" class="mt-2 flex gap-1">
                     <img
                       v-for="(url, i) in postImages.slice(0, 2)"
@@ -472,6 +484,66 @@ const emit = defineEmits<{
 }>()
 
 const { user } = useAuth()
+
+// URLを検出する関数
+function extractUrls(text: string | undefined | null): string[] {
+  if (!text) return []
+  
+  const urlRegex = /(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+)/gi
+  const matches = text.match(urlRegex) || []
+  
+  const urls = matches.map(url => {
+    let normalizedUrl = url
+    // 末尾の句読点や記号を削除
+    normalizedUrl = normalizedUrl.replace(/[.,;:!?)\]}>]+$/, '')
+    
+    if (normalizedUrl.startsWith('www.')) {
+      normalizedUrl = 'https://' + normalizedUrl
+    }
+    try {
+      new URL(normalizedUrl)
+      return normalizedUrl
+    } catch {
+      return null
+    }
+  }).filter((url): url is string => url !== null)
+  
+  // 重複を除去
+  return [...new Set(urls)]
+}
+
+// 投稿本文からURLを抽出（computed）
+const postUrls = computed(() => {
+  const content = displayPost.value?.content
+  return extractUrls(content)
+})
+
+// URLをリンクに変換する関数
+function linkifyText(text: string): string {
+  if (!text) return ''
+  
+  // URLの正規表現（http://, https://, www.で始まるURLを検出）
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi
+  
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(urlRegex, (url) => {
+      let href = url
+      // www.で始まる場合はhttps://を追加
+      if (url.startsWith('www.')) {
+        href = 'https://' + url
+      }
+      // URLが有効かどうかを簡易チェック
+      try {
+        new URL(href)
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline break-all">${url}</a>`
+      } catch {
+        return url
+      }
+    })
+}
 
 const isMyPost = computed(() => !!user.value && props.post.userId === user.value.id)
 const showFollowOnPost = computed(() => !!user.value && props.post.userId !== user.value.id)

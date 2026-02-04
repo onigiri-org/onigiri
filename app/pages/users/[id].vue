@@ -2,7 +2,7 @@
   <UContainer class="max-w-4xl py-6">
     <div class="space-y-6">
       <!-- 戻るリンク -->
-      <div>
+      <div class="flex items-center justify-between">
         <UButton
           variant="ghost"
           color="neutral"
@@ -11,6 +11,18 @@
           to="/"
         >
           タイムラインに戻る
+        </UButton>
+        <UButton
+          v-if="isOwnProfile"
+          variant="ghost"
+          color="neutral"
+          size="sm"
+          icon="i-lucide-log-out"
+          class="text-gray-500 dark:text-gray-400"
+          aria-label="ログアウト"
+          @click="handleLogout"
+        >
+          ログアウト
         </UButton>
       </div>
 
@@ -431,7 +443,7 @@ const route = useRoute()
 const router = useRouter()
 const identifier = computed(() => route.params.id as string)
 
-const { user, fetchUser } = useAuth()
+const { user, logout, fetchUser } = useAuth()
 
 const { data, pending, error, refresh } = await useFetch(() => `/api/users/${identifier.value}`, {
   key: () => `user-${identifier.value}`,
@@ -829,5 +841,10 @@ async function loadMoreLikes() {
   } finally {
     likesLoadingMore.value = false
   }
+}
+
+const handleLogout = async () => {
+  await logout()
+  await router.push('/login')
 }
 </script>

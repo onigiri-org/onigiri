@@ -64,6 +64,7 @@
         <PostForm
           ref="postFormRef"
           @posted="onPostSubmitted"
+          @cancelled="closePostModal"
         />
       </template>
     </UModal>
@@ -73,7 +74,7 @@
       v-if="user"
       color="primary"
       size="lg"
-      class="fixed bottom-6 right-6 rounded-full shadow-lg z-50 flex flex-col gap-0.5 items-center justify-center min-w-[3.5rem] min-h-[3.5rem]"
+      class="fixed bottom-20 md:bottom-6 right-6 rounded-full shadow-lg z-[60] flex flex-col gap-0.5 items-center justify-center min-w-[3.5rem] min-h-[3.5rem]"
       aria-label="新規投稿"
       @click="openPostModal"
     >

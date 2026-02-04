@@ -1,6 +1,19 @@
 <template>
   <UContainer class="max-w-4xl py-6">
     <div class="space-y-6">
+      <!-- 戻るリンク -->
+      <div>
+        <UButton
+          variant="ghost"
+          color="neutral"
+          size="sm"
+          icon="i-lucide-arrow-left"
+          to="/"
+        >
+          タイムラインに戻る
+        </UButton>
+      </div>
+
       <!-- ヘッダー -->
       <div class="flex items-center gap-2">
         <UIcon name="i-lucide-bell" class="w-6 h-6 text-primary" />
@@ -61,8 +74,15 @@
               </div>
               
               <!-- 投稿のプレビュー -->
-              <div v-if="notification.postContent" class="mt-2 p-2 bg-gray-50 dark:bg-gray-800/30 rounded text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
-                {{ notification.postContent }}
+              <div v-if="notification.postContent" class="mt-2">
+                <div class="p-2 bg-gray-50 dark:bg-gray-800/30 rounded text-sm text-gray-600 dark:text-gray-400 line-clamp-2" v-html="linkifyText(notification.postContent)"></div>
+                <!-- OGPカード -->
+                <OgpCard
+                  v-for="(url, index) in extractUrls(notification.postContent)"
+                  :key="`ogp-${notification.id}-${index}`"
+                  :url="url"
+                  class="mt-2"
+                />
               </div>
               
               <div class="mt-2 text-xs text-gray-400 dark:text-gray-500">
@@ -256,4 +276,51 @@ const errorMessage = computed(() => {
   if (e.data?.message) return e.data.message
   return '読み込みに失敗しました'
 })
+
+// URLを検出する関数
+function extractUrls(text: string): string[] {
+  if (!text) return []
+  
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi
+  const matches = text.match(urlRegex) || []
+  
+  return matches.map(url => {
+    if (url.startsWith('www.')) {
+      return 'https://' + url
+    }
+    try {
+      new URL(url)
+      return url
+    } catch {
+      return null
+    }
+  }).filter((url): url is string => url !== null)
+}
+
+// URLをリンクに変換する関数
+function linkifyText(text: string): string {
+  if (!text) return ''
+  
+  // URLの正規表現（http://, https://, www.で始まるURLを検出）
+  const urlRegex = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi
+  
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(urlRegex, (url) => {
+      let href = url
+      // www.で始まる場合はhttps://を追加
+      if (url.startsWith('www.')) {
+        href = 'https://' + url
+      }
+      // URLが有効かどうかを簡易チェック
+      try {
+        new URL(href)
+        return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline break-all">${url}</a>`
+      } catch {
+        return url
+      }
+    })
+}
 </script>

@@ -5,8 +5,8 @@
   </div>
   <!-- その他のページはサイドバー付きレイアウト -->
   <div v-else class="flex min-h-screen">
-    <!-- サイドバー（常に表示、ログイン時のみユーザー情報を表示） -->
-    <aside class="w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0">
+    <!-- サイドバー（PC時のみ表示） -->
+    <aside class="hidden md:block w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 flex-shrink-0">
       <div class="sticky top-0 p-4 space-y-4">
         <!-- ユーザー情報（ログイン時のみ表示） -->
         <ClientOnly>
@@ -71,16 +71,6 @@
                 {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
               </span>
             </NuxtLink>
-            
-            <NuxtLink
-              v-if="user"
-              :to="`/users/${user.handle || user.id}`"
-              class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              active-class="bg-primary/10 text-primary font-medium"
-            >
-              <UIcon name="i-lucide-user" class="w-5 h-5" />
-              <span>プロフィール</span>
-            </NuxtLink>
           </ClientOnly>
           
           <!-- タグ検索 -->
@@ -92,6 +82,18 @@
             <UIcon name="i-lucide-search" class="w-5 h-5" />
             <span>タグ検索</span>
           </NuxtLink>
+
+          <ClientOnly>
+            <NuxtLink
+              v-if="user"
+              :to="`/users/${user.handle || user.id}`"
+              class="flex items-center gap-3 px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              active-class="bg-primary/10 text-primary font-medium"
+            >
+              <UIcon name="i-lucide-user" class="w-5 h-5" />
+              <span>プロフィール</span>
+            </NuxtLink>
+          </ClientOnly>
         </nav>
 
         <ClientOnly>
@@ -112,9 +114,67 @@
     </aside>
 
     <!-- メインコンテンツ -->
-    <main class="flex-1 min-w-0">
+    <main class="flex-1 min-w-0 pb-20 md:pb-0">
       <slot />
     </main>
+
+    <!-- SP用下部ナビゲーション -->
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 z-50">
+      <div class="flex items-center justify-around h-16">
+        <!-- タイムライン -->
+        <NuxtLink
+          to="/"
+          class="flex flex-col items-center justify-center gap-1 px-4 py-2 text-gray-600 dark:text-gray-400 transition-colors"
+          active-class="text-primary"
+        >
+          <UIcon name="i-lucide-home" class="w-6 h-6" />
+          <span class="text-xs">タイムライン</span>
+        </NuxtLink>
+
+        <!-- 通知 -->
+        <ClientOnly>
+          <NuxtLink
+            v-if="user"
+            to="/notifications"
+            class="relative flex flex-col items-center justify-center gap-1 px-4 py-2 text-gray-600 dark:text-gray-400 transition-colors"
+            active-class="text-primary"
+          >
+            <UIcon name="i-lucide-bell" class="w-6 h-6" />
+            <span class="text-xs">通知</span>
+            <span
+              v-if="unreadNotificationCount > 0"
+              class="absolute top-1 right-2 flex items-center justify-center h-4 bg-error text-white text-[10px] font-medium rounded-full px-1"
+              :class="unreadNotificationCount > 9 ? 'min-w-[1.5rem]' : 'w-4'"
+            >
+              {{ unreadNotificationCount > 99 ? '99+' : unreadNotificationCount }}
+            </span>
+          </NuxtLink>
+        </ClientOnly>
+
+        <!-- タグ検索 -->
+        <NuxtLink
+          to="/search"
+          class="flex flex-col items-center justify-center gap-1 px-4 py-2 text-gray-600 dark:text-gray-400 transition-colors"
+          active-class="text-primary"
+        >
+          <UIcon name="i-lucide-search" class="w-6 h-6" />
+          <span class="text-xs">検索</span>
+        </NuxtLink>
+
+        <!-- プロフィール -->
+        <ClientOnly>
+          <NuxtLink
+            v-if="user"
+            :to="`/users/${user.handle || user.id}`"
+            class="flex flex-col items-center justify-center gap-1 px-4 py-2 text-gray-600 dark:text-gray-400 transition-colors"
+            active-class="text-primary"
+          >
+            <UIcon name="i-lucide-user" class="w-6 h-6" />
+            <span class="text-xs">プロフィール</span>
+          </NuxtLink>
+        </ClientOnly>
+      </div>
+    </nav>
   </div>
 </template>
 
