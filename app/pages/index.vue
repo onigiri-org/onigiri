@@ -50,22 +50,63 @@
       </div>
     </div>
 
-    <!-- 新規投稿モーダル -->
+    <!-- 新規投稿モーダル（SP対応：全画面表示） -->
     <UModal
       v-if="user"
       v-model:open="postModalOpen"
-      :ui="{ width: 'sm:max-w-2xl' }"
+      :ui="{
+        width: 'w-full sm:max-w-2xl',
+        height: 'h-screen sm:h-auto',
+        margin: 'm-0 sm:m-auto',
+        rounded: 'rounded-none sm:rounded-lg',
+        padding: 'p-0',
+        overlay: {
+          background: 'bg-black/50 dark:bg-black/75'
+        },
+        body: {
+          padding: 'p-0',
+          base: 'overflow-hidden'
+        },
+        header: {
+          padding: 'p-0',
+          base: 'border-b border-gray-200 dark:border-gray-700'
+        }
+      }"
+      :close-button="false"
       @close="closePostModal"
     >
       <template #header>
-        <h2 class="text-lg font-semibold">新規投稿</h2>
+        <div class="flex items-center justify-between w-full">
+          <button
+            type="button"
+            class="rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
+            aria-label="閉じる"
+            @click="closePostModal"
+          >
+            <UIcon name="i-lucide-x" class="w-5 h-5" />
+          </button>
+          <h2 class="text-lg font-semibold flex-1 text-center">新規投稿</h2>
+          <UButton
+            type="submit"
+            form="post-form"
+            :loading="postFormLoading"
+            :disabled="!postFormContent.trim()"
+            size="sm"
+            class="sm:px-4 flex-shrink-0"
+          >
+            <span class="hidden sm:inline">投稿</span>
+            <span class="sm:hidden">投稿</span>
+          </UButton>
+        </div>
       </template>
       <template #body>
-        <PostForm
-          ref="postFormRef"
-          @posted="onPostSubmitted"
-          @cancelled="closePostModal"
-        />
+        <div class="h-full overflow-hidden">
+          <PostForm
+            ref="postFormRef"
+            @posted="onPostSubmitted"
+            @cancelled="closePostModal"
+          />
+        </div>
       </template>
     </UModal>
 
@@ -107,6 +148,9 @@ const postModalOpen = ref(false)
 const postFormRef = ref<any>(null)
 const sentinelRef = ref<HTMLElement | null>(null)
 const hasMore = ref(true)
+
+const postFormLoading = computed(() => postFormRef.value?.loading || false)
+const postFormContent = computed(() => postFormRef.value?.content || '')
 
 watch(data, () => {
   if (data.value) {

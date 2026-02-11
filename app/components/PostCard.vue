@@ -260,84 +260,193 @@
           </template>
         </UModal>
 
-        <!-- コメント投稿モーダル -->
-        <UModal v-model:open="commentModalOpen" :ui="{ width: 'sm:max-w-lg' }" @close="resetCommentForm">
+        <!-- コメント投稿モーダル（SP対応：全画面表示） -->
+        <UModal
+          v-model:open="commentModalOpen"
+          :ui="{
+            width: 'w-full sm:max-w-2xl',
+            height: 'h-screen sm:h-auto',
+            margin: 'm-0 sm:m-auto',
+            rounded: 'rounded-none sm:rounded-lg',
+            padding: 'p-0',
+            overlay: {
+              background: 'bg-black/50 dark:bg-black/75'
+            },
+            body: {
+              padding: 'p-0',
+              base: 'overflow-hidden'
+            },
+            header: {
+              padding: 'p-0',
+              base: 'border-b border-gray-200 dark:border-gray-700 w-full'
+            }
+          }"
+          :close-button="false"
+          @close="resetCommentForm"
+        >
           <template #header>
-            <h2 class="text-lg font-semibold">コメントする</h2>
+            <div class="flex items-center justify-between w-full">
+              <button
+                type="button"
+                class="rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors flex-shrink-0"
+                aria-label="閉じる"
+                @click="commentModalOpen = false"
+              >
+                <UIcon name="i-lucide-x" class="w-5 h-5" />
+              </button>
+              <h2 class="text-lg font-semibold flex-1 text-center">コメントする</h2>
+              <UButton
+                type="submit"
+                form="comment-form"
+                :loading="commentSubmitting"
+                :disabled="!commentContent.trim()"
+                size="sm"
+                class="sm:px-4 flex-shrink-0"
+              >
+                <span class="hidden sm:inline">コメント</span>
+                <span class="sm:hidden">コメント</span>
+              </UButton>
+            </div>
           </template>
           <template #body>
-            <!-- 元の投稿 -->
-            <div class="mb-4 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-              <div class="flex gap-3">
-                <NuxtLink :to="userUrl" class="flex-shrink-0">
-                  <UAvatar
-                    :src="post.userAvatarUrl?.trim() || undefined"
-                    :alt="post.userName"
-                    :text="(post.userName && post.userName.charAt(0)) ? post.userName.charAt(0).toUpperCase() : '?'"
-                    size="sm"
-                  />
-                </NuxtLink>
-                <div class="min-w-0 flex-1">
-                  <NuxtLink :to="userUrl" class="font-medium text-sm hover:underline">
-                    {{ post.userName }}
-                  </NuxtLink>
-                  <p class="mt-0.5 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap line-clamp-3 break-words" v-html="linkifyText(post.content)"></p>
-                  <div v-if="postImages.length" class="mt-2 flex gap-1">
-                    <img
-                      v-for="(url, i) in postImages.slice(0, 2)"
-                      :key="i"
-                      :src="url"
-                      :alt="`画像${i + 1}`"
-                      class="h-12 w-12 object-cover rounded border border-gray-200 dark:border-gray-600"
-                    >
-                  </div>
-                </div>
-              </div>
-            </div>
+            <div class="h-full overflow-hidden">
+              <div class="flex flex-col h-full sm:h-auto min-h-0 bg-white dark:bg-gray-900 overflow-hidden">
+                <form
+                  id="comment-form"
+                  @submit.prevent="submitComment"
+                  class="flex-1 flex flex-col overflow-hidden min-h-0"
+                >
+                  <div class="flex-1 px-4 py-4 sm:px-6 overflow-hidden">
+                    <!-- 元の投稿 -->
+                    <div class="mb-4 p-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                      <div class="flex gap-3">
+                        <NuxtLink :to="userUrl" class="flex-shrink-0">
+                          <UAvatar
+                            :src="post.userAvatarUrl?.trim() || undefined"
+                            :alt="post.userName"
+                            :text="(post.userName && post.userName.charAt(0)) ? post.userName.charAt(0).toUpperCase() : '?'"
+                            size="sm"
+                          />
+                        </NuxtLink>
+                        <div class="min-w-0 flex-1">
+                          <NuxtLink :to="userUrl" class="font-medium text-sm hover:underline">
+                            {{ post.userName }}
+                          </NuxtLink>
+                          <p class="mt-0.5 text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap line-clamp-3 break-words" v-html="linkifyText(post.content)"></p>
+                          <div v-if="postImages.length" class="mt-2 flex gap-1">
+                            <img
+                              v-for="(url, i) in postImages.slice(0, 2)"
+                              :key="i"
+                              :src="url"
+                              :alt="`画像${i + 1}`"
+                              class="h-12 w-12 object-cover rounded border border-gray-200 dark:border-gray-600"
+                            >
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
-            <form id="comment-form" @submit.prevent="submitComment" class="space-y-4">
-              <UFormField label="コメント内容" :hint="`${commentContent.length}/500文字`">
-                <UTextarea
-                  v-model="commentContent"
-                  :rows="3"
-                  placeholder="コメントを入力..."
-                  :maxlength="500"
-                  size="md"
-                  class="w-full"
-                />
-              </UFormField>
-              <UFormField label="画像（任意・最大4枚）">
-                <div class="space-y-2">
-                  <input
-                    ref="commentImageInputRef"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
-                    multiple
-                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-primary file:text-primary-foreground file:font-medium hover:file:opacity-90"
-                    @change="onCommentImageSelect"
-                  >
-                  <p v-if="commentImageUploading" class="text-sm text-gray-500">アップロード中...</p>
-                  <div v-if="commentImageUrls.length" class="flex flex-wrap gap-2 mt-2">
-                    <div v-for="(url, idx) in commentImageUrls" :key="url" class="relative">
-                      <img :src="url" :alt="`プレビュー ${idx + 1}`" class="h-16 w-16 object-cover rounded-lg border border-gray-200 dark:border-gray-700">
-                      <button type="button" class="absolute -top-0.5 -right-0.5 rounded-full bg-gray-800 text-white p-0.5 hover:bg-gray-700" aria-label="削除" @click="removeCommentImage(idx)">
-                        <UIcon name="i-lucide-x" class="w-3 h-3" />
-                      </button>
+                    <div class="flex gap-3 sm:gap-4">
+                      <!-- ユーザーアバター -->
+                      <div class="flex-shrink-0">
+                        <img
+                          v-if="user?.avatarUrl"
+                          :src="user.avatarUrl"
+                          :alt="user.name"
+                          class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+                        >
+                        <div
+                          v-else
+                          class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center"
+                        >
+                          <UIcon name="i-lucide-user" class="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
+                        </div>
+                      </div>
+
+                      <!-- 入力エリア -->
+                      <div class="flex-1 min-w-0">
+                        <!-- テキストエリア -->
+                        <textarea
+                          v-model="commentContent"
+                          :rows="8"
+                          placeholder="コメントを入力..."
+                          :maxlength="500"
+                          class="w-full resize-none border-0 bg-transparent text-lg sm:text-xl placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-0"
+                          style="min-height: 120px;"
+                        />
+                        <div class="text-right text-sm text-gray-500 dark:text-gray-400 mt-2">
+                          {{ commentContent.length }}/500
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 画像プレビュー（全幅表示） -->
+                    <div v-if="commentImageUrls.length" class="mt-4 grid gap-2 grid-cols-2">
+                      <div
+                        v-for="(url, index) in commentImageUrls"
+                        :key="url"
+                        class="relative group rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800"
+                      >
+                        <img
+                          :src="url"
+                          :alt="`プレビュー ${index + 1}`"
+                          class="w-full aspect-video object-cover"
+                        >
+                        <button
+                          type="button"
+                          class="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                          aria-label="削除"
+                          @click="removeCommentImage(index)"
+                        >
+                          <UIcon name="i-lucide-x" class="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- エラー表示（全幅表示） -->
+                    <UAlert
+                      v-if="commentError"
+                      color="error"
+                      variant="soft"
+                      :title="commentError"
+                      class="mt-4"
+                    />
+                  </div>
+
+                  <!-- フッター（ツールバー） -->
+                  <div class="border-t border-gray-200 dark:border-gray-700 px-4 py-3 sm:px-6 flex-shrink-0">
+                    <div class="flex items-center justify-between">
+                      <!-- 左側：画像追加ボタン -->
+                      <div class="flex items-center gap-4">
+                        <!-- 画像追加 -->
+                        <label class="cursor-pointer">
+                          <input
+                            ref="commentImageInputRef"
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp,image/gif"
+                            multiple
+                            class="hidden"
+                            @change="onCommentImageSelect"
+                          >
+                          <UIcon
+                            name="i-lucide-image"
+                            class="w-5 h-5 text-primary hover:text-primary/80 transition-colors"
+                            :class="{ 'opacity-50 cursor-not-allowed': commentImageUrls.length >= MAX_COMMENT_IMAGES }"
+                          />
+                        </label>
+                        <p v-if="commentImageUploading" class="text-sm text-gray-500">
+                          アップロード中...
+                        </p>
+                      </div>
+
+                      <!-- 右側：文字数カウント（デスクトップのみ） -->
+                      <div class="hidden sm:block text-sm text-gray-500 dark:text-gray-400">
+                        {{ commentContent.length }}/500
+                      </div>
                     </div>
                   </div>
-                </div>
-              </UFormField>
-              <UAlert v-if="commentError" color="error" variant="soft" :title="commentError" />
-            </form>
-          </template>
-          <template #footer>
-            <div class="flex justify-end gap-2 w-full">
-              <UButton color="neutral" variant="ghost" size="md" @click="commentModalOpen = false">
-                キャンセル
-              </UButton>
-              <UButton type="submit" form="comment-form" :loading="commentSubmitting" :disabled="!commentContent.trim()" size="md">
-                コメントする
-              </UButton>
+                </form>
+              </div>
             </div>
           </template>
         </UModal>

@@ -1,110 +1,147 @@
 <template>
-  <form @submit.prevent="handleSubmit" class="space-y-4">
-      <UFormField label="投稿内容" :hint="`${content.length}/500文字`">
-        <UTextarea
-          v-model="content"
-          :rows="4"
-          placeholder="今のご飯どうだった？"
-          :maxlength="500"
-          size="md"
-          class="w-full"
-        />
-      </UFormField>
-
-      <UFormField label="画像（任意・最大4枚）">
-        <div class="space-y-2">
-          <input
-            ref="imageInputRef"
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            multiple
-            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:bg-primary file:text-primary-foreground file:font-medium hover:file:opacity-90"
-            @change="onImageSelect"
-          >
-          <p v-if="imageUploading" class="text-sm text-gray-500">
-            アップロード中...
-          </p>
-          <div v-if="imageUrls.length" class="flex flex-wrap gap-2 mt-2">
-            <div
-              v-for="(url, index) in imageUrls"
-              :key="url"
-              class="relative"
+  <div class="flex flex-col h-full sm:h-auto min-h-0 bg-white dark:bg-gray-900 overflow-hidden">
+    <!-- フォーム本体 -->
+    <form
+      id="post-form"
+      @submit.prevent="handleSubmit"
+      class="flex-1 flex flex-col overflow-hidden min-h-0"
+    >
+      <div class="flex-1 px-4 py-4 sm:px-6 overflow-hidden">
+        <div class="flex gap-3 sm:gap-4">
+          <!-- ユーザーアバター -->
+          <div class="flex-shrink-0">
+            <img
+              v-if="user?.avatarUrl"
+              :src="user.avatarUrl"
+              :alt="user.name"
+              class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
             >
-              <img
-                :src="url"
-                :alt="`プレビュー ${index + 1}`"
-                class="h-20 w-20 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
-              >
-              <button
-                type="button"
-                class="absolute -top-1 -right-1 rounded-full bg-gray-800 text-white p-0.5 hover:bg-gray-700"
-                aria-label="削除"
-                @click="removeImage(index)"
-              >
-                <UIcon name="i-lucide-x" class="w-3.5 h-3.5" />
-              </button>
+            <div
+              v-else
+              class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-300 dark:bg-gray-700 flex items-center justify-center"
+            >
+              <UIcon name="i-lucide-user" class="w-5 h-5 sm:w-6 sm:h-6 text-gray-500" />
+            </div>
+          </div>
+
+          <!-- 入力エリア -->
+          <div class="flex-1 min-w-0">
+            <!-- テキストエリア -->
+            <textarea
+              v-model="content"
+              :rows="isMobile ? 10 : 6"
+              placeholder="今のご飯どうだった？"
+              :maxlength="500"
+              class="w-full resize-none border-0 bg-transparent text-lg sm:text-xl placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:ring-0 pb-safe"
+              style="min-height: 150px;"
+            />
+            <div class="text-right text-sm text-gray-500 dark:text-gray-400 mt-2">
+              {{ content.length }}/500
             </div>
           </div>
         </div>
-      </UFormField>
 
-      <UFormField label="タグ（任意・最大5個）" hint="タグを入力して Enter で追加">
-        <div class="flex flex-wrap items-center gap-2 p-2 border border-gray-200 dark:border-gray-700 rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary">
-          <span
-            v-for="(tag, index) in tags"
-            :key="index"
-            class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-primary/10 text-primary text-sm"
-          >
-            {{ tag }}
-            <button
-              type="button"
-              class="ml-0.5 rounded hover:bg-primary/20 p-0.5"
-              aria-label="タグを削除"
-              @click="removeTag(index)"
+        <!-- タグ表示と入力（全幅表示） -->
+        <div class="mt-4">
+          <div v-if="tags.length" class="flex flex-wrap gap-2 mb-2">
+            <span
+              v-for="(tag, index) in tags"
+              :key="index"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm"
             >
-              <UIcon name="i-lucide-x" class="w-3.5 h-3.5" />
-            </button>
-          </span>
-          <input
-            v-if="tags.length < 5"
-            ref="tagInputRef"
-            v-model="tagInput"
-            type="text"
-            class="flex-1 min-w-[120px] px-2 py-1 bg-transparent border-0 outline-none text-sm"
-            placeholder="タグを入力..."
-            maxlength="30"
-            @keydown.enter.prevent="addTag"
-          >
+              {{ tag }}
+              <button
+                type="button"
+                class="rounded-full hover:bg-primary/20 p-0.5"
+                aria-label="タグを削除"
+                @click="removeTag(index)"
+              >
+                <UIcon name="i-lucide-x" class="w-3.5 h-3.5" />
+              </button>
+            </span>
+          </div>
+          <!-- タグ入力 -->
+          <div v-if="tags.length < 5">
+            <input
+              ref="tagInputRef"
+              v-model="tagInput"
+              type="text"
+              class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-transparent focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="タグを入力して Enter で追加"
+              maxlength="30"
+              @keydown.enter.prevent="addTag"
+            >
+          </div>
         </div>
-      </UFormField>
 
-      <div class="flex justify-end gap-2">
-        <UButton
-          type="button"
-          color="neutral"
-          variant="ghost"
-          size="md"
-          @click="handleCancel"
-        >
-          キャンセル
-        </UButton>
-        <UButton
-          type="submit"
-          :loading="loading"
-          :disabled="!content.trim()"
-          size="md"
-        >
-          投稿する
-        </UButton>
+        <!-- 画像プレビュー（全幅表示） -->
+        <div v-if="imageUrls.length" class="mt-4 grid gap-2" :class="getImageGridClass(imageUrls.length)">
+              <div
+                v-for="(url, index) in imageUrls"
+                :key="url"
+                class="relative group rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800"
+              >
+                <img
+                  :src="url"
+                  :alt="`プレビュー ${index + 1}`"
+                  class="w-full h-full object-cover"
+                  :class="getImageClass(imageUrls.length, index)"
+                >
+                <button
+                  type="button"
+                  class="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 hover:bg-black/80 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label="削除"
+                  @click="removeImage(index)"
+                >
+                  <UIcon name="i-lucide-x" class="w-4 h-4" />
+                </button>
+              </div>
+        </div>
+
+        <!-- エラー表示（全幅表示） -->
+        <UAlert
+          v-if="error"
+          color="error"
+          variant="soft"
+          :title="error"
+          class="mt-4"
+        />
       </div>
 
-      <UAlert
-        v-if="error"
-        color="error"
-        variant="soft"
-        :title="error"
-      />
+      <!-- フッター（ツールバー） -->
+      <div class="border-t border-gray-200 dark:border-gray-700 px-4 py-3 sm:px-6 flex-shrink-0">
+        <div class="flex items-center justify-between">
+          <!-- 左側：画像・タグ追加ボタン -->
+          <div class="flex items-center gap-4">
+            <!-- 画像追加 -->
+            <label class="cursor-pointer">
+              <input
+                ref="imageInputRef"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                multiple
+                class="hidden"
+                @change="onImageSelect"
+              >
+              <UIcon
+                name="i-lucide-image"
+                class="w-5 h-5 text-primary hover:text-primary/80 transition-colors"
+                :class="{ 'opacity-50 cursor-not-allowed': imageUrls.length >= MAX_IMAGES }"
+              />
+            </label>
+            <p v-if="imageUploading" class="text-sm text-gray-500">
+              アップロード中...
+            </p>
+          </div>
+
+          <!-- 右側：文字数カウント（デスクトップのみ） -->
+          <div class="hidden sm:block text-sm text-gray-500 dark:text-gray-400">
+            {{ content.length }}/500
+          </div>
+        </div>
+      </div>
     </form>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -125,6 +162,33 @@ const imageInputRef = ref<HTMLInputElement | null>(null)
 const imageUploading = ref(false)
 const loading = ref(false)
 const error = ref('')
+
+// モバイル判定
+const isMobile = computed(() => {
+  if (process.client) {
+    return window.innerWidth < 640
+  }
+  return false
+})
+
+// 画像グリッドのクラスを決定
+function getImageGridClass(count: number): string {
+  if (count === 1) return 'grid-cols-1'
+  if (count === 2) return 'grid-cols-2'
+  if (count === 3) return 'grid-cols-2'
+  return 'grid-cols-2'
+}
+
+// 画像のクラスを決定
+function getImageClass(count: number, index: number): string {
+  if (count === 1) return 'aspect-video'
+  if (count === 2) return 'aspect-video'
+  if (count === 3) {
+    if (index === 0) return 'aspect-video row-span-2'
+    return 'aspect-video'
+  }
+  return 'aspect-video'
+}
 
 function addTag() {
   const t = tagInput.value.trim()
@@ -315,6 +379,8 @@ const handleSubmit = async () => {
 }
 
 defineExpose({
-  reset
+  reset,
+  loading,
+  content
 })
 </script>
