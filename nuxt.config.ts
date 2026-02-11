@@ -49,8 +49,10 @@ export default defineNuxtConfig({
     // 開発環境では自動的にfs-liteを使用
     // Cloudflare環境では自動的にCloudflare KVバインディングを使用
     // NuxtHubがwrangler.jsoncから自動的にKVバインディングを検出します
-    // ローカル開発環境でのみfs-liteを使用
-    kv: process.env.DEV || (!process.env.CF_PAGES && !process.env.CF_WORKERS && !process.env.CLOUDFLARE_ENV) ? {
+    // ローカル開発環境（npm run dev）でのみfs-liteを使用
+    // それ以外は常にCloudflare KVを使用（Cloudflare環境ではfs-liteは使用不可）
+    // Nitro presetがcloudflare_moduleの場合、常にCloudflare KVを使用
+    kv: (typeof process !== 'undefined' && process.env.DEV === 'true' && process.env.NODE_ENV === 'development' && process.env.NITRO_PRESET !== 'cloudflare_module') ? {
       driver: 'fs-lite',
       base: '.data/kv'
     } : {
