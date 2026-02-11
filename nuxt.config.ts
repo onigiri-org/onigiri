@@ -51,7 +51,10 @@ export default defineNuxtConfig({
     kv: process.env.CF_PAGES || process.env.CF_WORKERS ? {
       driver: 'cloudflare-kv-binding',
       namespaceId: 'beb16a371f1c413e8d77b6829a492b60'
-    } : true
+    } : {
+      driver: 'fs-lite',
+      base: '.data/kv'
+    }
   },
 
   // Cloudflare Workers向けのNitro設定
