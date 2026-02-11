@@ -48,10 +48,8 @@ export default defineNuxtConfig({
     } : true,
     // 開発環境では自動的にfs-liteを使用
     // Cloudflare環境では自動的にCloudflare KVバインディングを使用
-    kv: process.env.CF_PAGES || process.env.CF_WORKERS ? {
-      driver: 'cloudflare-kv-binding',
-      namespaceId: 'beb16a371f1c413e8d77b6829a492b60'
-    } : {
+    // NuxtHubがwrangler.jsoncから自動的にKVバインディングを検出します
+    kv: process.env.CF_PAGES || process.env.CF_WORKERS ? true : {
       driver: 'fs-lite',
       base: '.data/kv'
     }
