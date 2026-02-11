@@ -1,6 +1,7 @@
 // 認証ユーティリティ関数（kv / db は NuxtHub により auto-import）
 
 import type { H3Event } from 'h3'
+import { createError } from 'h3'
 import { eq } from 'drizzle-orm'
 
 export interface User {
@@ -17,8 +18,13 @@ export async function getUserIdFromSession(event: H3Event): Promise<string | nul
   const session = await getCookie(event, 'session')
   if (!session) return null
 
-  const userId = await kv.get(`session:${session}`)
-  return userId ? String(userId) : null
+  try {
+    const userId = await kv.get(`session:${session}`)
+    return userId ? String(userId) : null
+  } catch (error: any) {
+    console.error('KV get error:', error)
+    return null
+  }
 }
 
 // セッションからユーザー情報を取得
@@ -44,7 +50,15 @@ export async function getUserFromSession(event: H3Event): Promise<User | null> {
 export async function createSession(event: H3Event, userId: string): Promise<string> {
   const sessionId = crypto.randomUUID()
 
-  await kv.set(`session:${sessionId}`, userId, { ttl: 60 * 60 * 24 * 7 })
+  try {
+    await kv.set(`session:${sessionId}`, userId, { ttl: 60 * 60 * 24 * 7 })
+  } catch (error: any) {
+    console.error('KV set error:', error)
+    throw createError({
+      statusCode: 500,
+      message: 'セッションの作成に失敗しました: ' + (error.message || 'KVストレージエラー')
+    })
+  }
 
   setCookie(event, 'session', sessionId, {
     httpOnly: true,
@@ -60,7 +74,12 @@ export async function createSession(event: H3Event, userId: string): Promise<str
 export async function deleteSession(event: H3Event): Promise<void> {
   const session = await getCookie(event, 'session')
   if (session) {
-    await kv.del(`session:${session}`)
+    try {
+      await kv.del(`session:${session}`)
+    } catch (error: any) {
+      console.error('KV del error:', error)
+      // エラーが発生してもクッキーは削除する
+    }
     setCookie(event, 'session', '', {
       httpOnly: true,
       secure: true,
