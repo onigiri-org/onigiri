@@ -33,7 +33,7 @@ export default defineNuxtConfig({
     // 開発環境では自動的にローカルSQLiteを使用
     // Cloudflare環境では自動的にCloudflare D1を使用
     // NuxtHubが自動的に環境を検出するため、開発環境では'sqlite'を指定
-    db: process.env.CF_PAGES || process.env.CF_WORKERS ? {
+    db: process.env.CF_PAGES || process.env.CF_WORKERS || process.env.CLOUDFLARE_ENV ? {
       dialect: 'sqlite',
       driver: 'd1',
       connection: {
@@ -42,18 +42,20 @@ export default defineNuxtConfig({
     } : 'sqlite',
     // 開発環境では自動的にローカルファイルシステムを使用
     // Cloudflare環境では自動的にCloudflare R2を使用
-    blob: process.env.CF_PAGES || process.env.CF_WORKERS ? {
+    blob: process.env.CF_PAGES || process.env.CF_WORKERS || process.env.CLOUDFLARE_ENV ? {
       driver: 'cloudflare-r2',
       bucketName: 'onigiri-blob'
     } : true,
     // 開発環境では自動的にfs-liteを使用
     // Cloudflare環境では自動的にCloudflare KVバインディングを使用
-    kv: process.env.CF_PAGES || process.env.CF_WORKERS ? {
-      driver: 'cloudflare-kv-binding',
-      namespaceId: 'beb16a371f1c413e8d77b6829a492b60'
-    } : {
+    // NuxtHubがwrangler.jsoncから自動的にKVバインディングを検出します
+    // ローカル開発環境でのみfs-liteを使用
+    kv: process.env.DEV || (!process.env.CF_PAGES && !process.env.CF_WORKERS && !process.env.CLOUDFLARE_ENV) ? {
       driver: 'fs-lite',
       base: '.data/kv'
+    } : {
+      driver: 'cloudflare-kv-binding',
+      namespaceId: 'beb16a371f1c413e8d77b6829a492b60'
     }
   },
 
@@ -65,6 +67,10 @@ export default defineNuxtConfig({
     cloudflare: {
       deployConfig: true,
       nodeCompat: true
+    },
+    // Cloudflare環境ではfs-liteを使用しないようにする
+    experimental: {
+      wasm: true
     }
   },
 
